@@ -11,6 +11,7 @@
         "**/base_templates/**/*.html": "django-html",
         "**/requirements{/**,*}.{txt,in}": "pip-requirements",
         "string": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "ostream": "cpp"
     }
 }

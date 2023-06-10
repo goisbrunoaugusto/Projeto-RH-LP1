@@ -129,6 +129,9 @@ public:
     {
         return this->ingressoEmpresa;
     }
+    int getDiasDeFalta(){
+        return this-> diasDeFalta;
+    }
     // setters
     void setSalario(string novoSalario)
     {
@@ -147,7 +150,7 @@ public:
         this->diasDeFalta = novoDiasDeFalta;
     }
     //
-    virtual float calcularSalario(int diasFaltas) = 0;
+    virtual float calcularSalario() = 0;
     virtual float calcularRecisao(Data desligamento) = 0;
 };
 
@@ -173,15 +176,23 @@ public:
         this->adicionalInsalubridade = novoAdicionalInsalubridade;
     }
     //
-    float calcularSalario(int diasFaltas)
+    float calcularSalario()
     {
-        // precisa implementar
-        return 0;
+        float salarioReal = stof(getSalario());
+        salarioReal -= (salarioReal/30) * getDiasDeFalta();
+        salarioReal = salarioReal * (1+adicionalInsalubridade);
+        salarioReal = salarioReal + (100*getQtdFilhos());
+
+        return salarioReal;
     }
     float calcularRecisao(Data desligamento)
     {
-        // precisa implementar
-        return 0;
+        float diasTrabalhando, anosRecisao, tempoTotal;
+        diasTrabalhando = getIngressoEmpresa().ano*365 + getIngressoEmpresa().mes*30 + getIngressoEmpresa().dia;
+        anosRecisao = desligamento.ano*365 + desligamento.mes*30 + desligamento.dia;
+        tempoTotal = (anosRecisao - diasTrabalhando) / 365;
+
+        return tempoTotal*stof(getSalario());
     }
 };
 
@@ -208,15 +219,36 @@ public:
         this->tipoVendedor = novoTipoVendedor;
     }
     //
-    float calcularSalario(int diasFaltas)
+    float calcularSalario()
     {
-        // precisa implementar
-        return 0;
+        float salarioReal = stof(getSalario());
+        salarioReal -= (salarioReal/30) * getDiasDeFalta();
+        if (tipoVendedor == 'A')
+        {
+            salarioReal = salarioReal * 1.25;
+        }
+
+        if (tipoVendedor == 'B')
+        {
+            salarioReal = salarioReal * 1.1;
+        }
+
+        if (tipoVendedor == 'C')
+        {
+            salarioReal = salarioReal * 1.05;
+        }
+        salarioReal += getQtdFilhos()*100;
+
+        return salarioReal;
     }
     float calcularRecisao(Data desligamento)
     {
-        // precisa implementar
-        return 0;
+        float diasTrabalhando, anosRecisao, tempoTotal;
+        diasTrabalhando = getIngressoEmpresa().ano*365 + getIngressoEmpresa().mes*30 + getIngressoEmpresa().dia;
+        anosRecisao = desligamento.ano*365 + desligamento.mes*30 + desligamento.dia;
+        tempoTotal = (anosRecisao - diasTrabalhando) / 365;
+
+        return tempoTotal*stof(getSalario());
     }
 };
 
@@ -245,15 +277,23 @@ public:
         this->participacaoLucros = novaParticipacaoLucros;
     }
     //
-    float calcularSalario(int diasFaltas)
+    float calcularSalario()
     {
-        // precisa implementar
-        return 0;
+        float salarioReal = stof(getSalario());
+        salarioReal -= (salarioReal/30) * getDiasDeFalta();
+        salarioReal += participacaoLucros;
+        salarioReal += getQtdFilhos()*100;
+
+        return salarioReal;
     }
     float calcularRecisao(Data desligamento)
     {
-        // precisa implementar
-        return 0;
+        float diasTrabalhando, anosRecisao, tempoTotal;
+        diasTrabalhando = getIngressoEmpresa().ano*365 + getIngressoEmpresa().mes*30 + getIngressoEmpresa().dia;
+        anosRecisao = desligamento.ano*365 + desligamento.mes*30 + desligamento.dia;
+        tempoTotal = (anosRecisao - diasTrabalhando) / 365;
+
+        return tempoTotal*stof(getSalario());
     }
 };
 
@@ -336,7 +376,8 @@ public:
         faturamento = stof(linha);
         this->faturamentoMensal = faturamento;
         empresa.close();
-    };
+    }
+
     void carregarAsg()
     {
         ifstream file;
@@ -346,9 +387,8 @@ public:
         Endereco endereco;
         Data data, dataIngresso;
 
-        while (!file.eof())
+        while (getline(file, linha))
         {
-            getline(file, linha);
             getline(file, linha);
             getline(file, linha);
             getline(file, linha);
@@ -415,9 +455,8 @@ public:
         Endereco endereco;
         Data data, dataIngresso;
 
-        while (!file.eof())
+        while (getline(file, linha))
         {
-            getline(file, linha);
             getline(file, linha);
             getline(file, linha);
             getline(file, linha);
@@ -483,9 +522,8 @@ public:
         Endereco endereco;
         Data data, dataIngresso;
 
-        while (!file.eof())
+        while (getline(file, linha))
         {
-            getline(file, linha);
             getline(file, linha);
             getline(file, linha);
             getline(file, linha);
@@ -552,7 +590,6 @@ public:
 
         getline(file, linha);
         getline(file, linha);
-        getline(file, linha);
 
         getline(file, linha);
         dono.setNome(linha);
@@ -606,7 +643,7 @@ public:
     void imprimeVendedores()
     {
         cout << "Lista de vendedores:" << endl;
-        for (auto i : asgs)
+        for (auto i : vendedores)
         {
             cout << "Nome: " << i.getNome() << endl;
             cout << "CPF: " << i.getCpf() << endl;
@@ -623,7 +660,7 @@ public:
     void imprimeGerentes()
     {
         cout << "Lista de gerentes:" << endl;
-        for (auto i : asgs)
+        for (auto i : gerentes)
         {
             cout << "Nome: " << i.getNome() << endl;
             cout << "CPF: " << i.getCpf() << endl;
@@ -639,25 +676,170 @@ public:
     }
     void imprimeDono()
     {
-        cout << "Lista de auxiliares de serviços gerais:" << endl;
+        cout << "Informações do dono:" << endl;
+        cout<<"Nome: "<<dono.getNome()<<endl;
+        cout<<"CPF: "<<dono.getCpf()<<endl;
+        cout<<"Data de nascimento: "<< dono.getDataNascimento().dia << "/" << dono.getDataNascimento().mes << "/" << dono.getDataNascimento().ano<< endl;
+        cout<<"Endereço: Rua "<< dono.getEnderecoPessoal().rua << ", " << dono.getEnderecoPessoal().numero << endl;
+        cout<<"Estado civil: "<< dono.getEstadoCivil()<<endl;
+        cout<<"Número de filhos: "<< dono.getQtdFilhos()<<endl;
+    }
+    void buscaFuncionario(string matricula)
+    {
+        bool encontrado = false;
+
         for (auto i : asgs)
         {
-            cout << "Nome: " << i.getNome() << endl;
-            cout << "CPF: " << i.getCpf() << endl;
-            cout << "Data de nascimento: " << i.getDataNascimento().dia << "/" << i.getDataNascimento().mes << "/" << i.getDataNascimento().ano << endl;
-            cout << "Endereço: " << i.getEnderecoPessoal().rua << ", " << i.getEnderecoPessoal().numero << endl;
-            cout << "Estado civil: " << i.getEstadoCivil() << endl;
-            cout << "Número de filhos: " << i.getQtdFilhos() << endl;
-            cout << "Salário: " << i.getSalario() << endl;
-            cout << "Matrícula: " << i.getMatricula() << endl;
-            cout << "Data de ingresso: " << i.getIngressoEmpresa().dia << "/" << i.getIngressoEmpresa().mes << "/" << i.getIngressoEmpresa().ano << endl;
-            cout << "---------------------------------------------------" << endl;
+            if (i.getMatricula() == matricula)
+            {
+                cout << "Funcionario encontrado" << endl;
+                encontrado = true;
+                break;
+            }
+        }
+        for (auto i : vendedores)
+        {
+           if (i.getMatricula() == matricula)
+            {
+                cout << "Funcionario encontrado" << endl;
+                encontrado = true;
+                break;
+            } 
+        }
+        for (auto i : gerentes)
+        {
+           if (i.getMatricula() == matricula)
+            {
+                cout << "Funcionario encontrado" << endl;
+                encontrado = true;
+                break;
+            } 
+        }
+        if (encontrado == false )
+        {
+            cout << "Funcionario não encontrado" << endl;
         }
     }
-    void buscaFuncionario();
-    void calculaSalarioFuncionario();
-    void calculaTodoOsSalarios();
-    void calcularRecisao();
+    void calculaSalarioFuncionario(string matricula)
+    {
+        bool encontrado = false;
+
+        for (auto i : asgs)
+        {
+            if (i.getMatricula() == matricula)
+            {
+                cout << "O salário do funcionário é: " << i.calcularSalario() << endl;
+                encontrado = true;
+                break;
+            }
+        }
+        for (auto i : vendedores)
+        {
+           if (i.getMatricula() == matricula)
+            {
+                cout << "O salário do funcionário é: " << i.calcularSalario() << endl;
+                encontrado = true;
+                break;
+            } 
+        }
+        for (auto i : gerentes)
+        {
+           if (i.getMatricula() == matricula)
+            {
+                cout << "O salário do funcionário é: " << i.calcularSalario() << endl;
+                encontrado = true;
+                break;
+            } 
+        }
+        if (encontrado == false )
+        {
+            cout << "Funcionario não encontrado" << endl;
+        }
+    }
+    void calculaTodoOsSalarios()
+    {
+        float salarioTotal=0, salarioAsgs=0, salarioVendedores=0, salarioGerentes=0;
+        ofstream file;
+        file.open ("Todos_os_salarios.txt");
+
+        for (auto i: asgs){
+            file << "Nome: " << i.getNome() << endl;
+            cout << "Nome: " << i.getNome() << endl;
+            file << "Cargo: ASG" << endl;
+            cout << "Cargo: ASG" << endl;
+            file << "Salário: " << i.calcularSalario() << endl;
+            cout << "Salário: " << i.calcularSalario() << endl;
+            file << "--------------------" << endl;
+            cout << "--------------------" << endl;
+            salarioTotal += i.calcularSalario();
+            salarioAsgs += i.calcularSalario();
+
+        }
+
+        for (auto i: vendedores){
+            file << "Nome: " << i.getNome() << endl;
+            cout << "Nome: " << i.getNome() << endl;
+            file << "Cargo: Vendedor" << endl;
+            cout << "Cargo: Vendedor" << endl;
+            file << "Salário: " << i.calcularSalario() << endl;
+            cout << "Salário: " << i.calcularSalario() << endl;
+            file << "--------------------" << endl;
+            cout << "--------------------" << endl;
+            salarioTotal += i.calcularSalario();
+            salarioVendedores += i.calcularSalario();
+        }
+
+        for (auto i: gerentes){
+            file << "Nome: " << i.getNome() << endl;
+            cout << "Nome: " << i.getNome() << endl;
+            file << "Cargo: Vendedor" << endl;
+            cout << "Cargo: Vendedor" << endl;
+            file << "Salário: " << i.calcularSalario() << endl;
+            cout << "Salário: " << i.calcularSalario() << endl;
+            file << "--------------------" << endl;
+            cout << "--------------------" << endl;
+            salarioTotal += i.calcularSalario();
+            salarioGerentes += i.calcularSalario();
+        }
+
+        file << "Total do salário dos Asgs: " << salarioAsgs << endl; 
+        cout << "Total do salário dos Asgs: " << salarioAsgs << endl; 
+        file << "Total do salário dos Vendedores: " << salarioVendedores << endl; 
+        cout << "Total do salário dos Vendedores: " << salarioVendedores << endl; 
+        file << "Total do salário dos Gerentes: " << salarioGerentes << endl; 
+        cout << "Total do salário dos Gerentes: " << salarioGerentes << endl; 
+        file << "Salário total dos funcionários : " << salarioTotal << endl; 
+        cout << "Salário total dos funcionários : " << salarioTotal << endl; 
+
+        file.close();
+    }
+    void calcularRecisao(string matricula, Data desligamento){
+        bool encontrado = false;
+        for (auto i: asgs){
+            if ( matricula == i.getMatricula()){
+                cout << "A recisão do funcionário é: " << i.calcularRecisao(desligamento);
+                encontrado = true;
+                break;
+            }
+        }
+        for (auto i: vendedores){
+            if ( matricula == i.getMatricula()){
+                cout << "A recisão do funcionário é: " << i.calcularRecisao(desligamento);
+                encontrado = true;
+                break;
+            }
+        }
+        for (auto i: gerentes){
+            if ( matricula == i.getMatricula()){
+                cout << "A recisão do funcionário é: " << i.calcularRecisao(desligamento);
+                encontrado = true;
+                break;
+            }
+        }
+        if (encontrado == false){
+            cout << "Funcionário não encontrado no sistema" << endl;
+        }
+    }
 
     void carregaFuncoes()
     {
@@ -665,9 +847,8 @@ public:
         funcoes.open("funcoes.txt");
         string linha;
 
-        while (!funcoes.eof())
+        while (getline(funcoes, linha))
         {
-            getline(funcoes, linha);
             if (linha == "carregarEmpresa()")
                 carregarEmpresa();
             else if (linha == "carregarAsg()")
@@ -686,14 +867,30 @@ public:
                 imprimeGerentes();
             else if (linha == "imprimeDono()")
                 imprimeDono();
-            else if (linha == "buscaFuncionario()")
-                buscaFuncionario();
-            else if (linha == "calculaSalarioFuncionario()")
-                calculaSalarioFuncionario();
+            else if (linha == "buscaFuncionario()"){
+                string matricula;
+                getline(funcoes, matricula);
+                buscaFuncionario(matricula);
+            }
+            else if (linha == "calculaSalarioFuncionario()"){
+                string matricula;
+                getline(funcoes, matricula);
+                calculaSalarioFuncionario(matricula);
+            }
             else if (linha == "calculaTodoOsSalarios()")
                 calculaTodoOsSalarios();
-            else if (linha == "calcularRecisao()")
-                calcularRecisao();
+            else if (linha == "calcularRecisao()"){
+                string matricula, datas;
+                Data data;
+                getline(funcoes, matricula);
+                getline (funcoes, datas);
+                data.ano = stoi(datas);
+                getline (funcoes, datas);
+                data.mes = stoi(datas);
+                getline (funcoes, datas);
+                data.dia = stoi(datas);
+                calcularRecisao(matricula, data);
+            }
         }
         funcoes.close();
     }

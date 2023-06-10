@@ -10,4 +10,8 @@ private:
     Endereco enderecoPessoal;
     string estadoCivil;
     int qtdFilhos;
+    public:
+    Pessoa();
+    Pessoa(string novoNome, string novoCpf, Data novaData, Endereco novoEndereco, string novoEstadoCivil, int novaQtdFilhos)
+    {}
 }

@@ -1,0 +1,40 @@
+Nome: Pedro de Araujo
+Cargo: ASG
+Salário: 1293.6
+--------------------
+Nome: Jorge Linhares
+Cargo: ASG
+Salário: 1586
+--------------------
+Nome: Antonio Augusto de Souza Filho
+Cargo: ASG
+Salário: 1347.4
+--------------------
+Nome: Luiz de Souza
+Cargo: Vendedor
+Salário: 1750
+--------------------
+Nome: Suziane Maria
+Cargo: Vendedor
+Salário: 2012.5
+--------------------
+Nome: Alexandra Gonçalve Dias
+Cargo: Vendedor
+Salário: 1517.5
+--------------------
+Nome: Guilherme Borba Dias
+Cargo: Vendedor
+Salário: 1875
+--------------------
+Nome: Paulo Herculano de Souza
+Cargo: Vendedor
+Salário: 1750
+--------------------
+Nome: Gustavo Luiz de Souza
+Cargo: Vendedor
+Salário: 3100
+--------------------
+Total do salário dos Asgs: 4227
+Total do salário dos Vendedores: 8905
+Total do salário dos Gerentes: 3100
+Salário total dos funcionários : 16232
